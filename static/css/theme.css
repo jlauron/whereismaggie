@@ -1,0 +1,13 @@
+.toolbar {
+    background-image: url("../img/bg_toolbar.png");
+    background-size: 75px 43px;
+    border-bottom: 1px solid #4c0733;
+}
+.toolbar h1{
+  /*  background-image: url(../img/Digiti_4.png); */
+    width: 77px; 
+    height: 44px;
+    background-size: 100% 100%;
+    margin: 0px 0px 0px -39px;
+}
+
