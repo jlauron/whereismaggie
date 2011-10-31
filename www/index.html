@@ -1,15 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" /> 
-<link rel="stylesheet" media="only screen and (-webkit-min-device-pixel-ratio: 2)" type="text/css" href="static/css/theme.css" />
-<style type="text/css">
-  body { height: 416px; width: 320px; margin: 0; }
-  #map { height: 320px; width: 310px; }
-  #map-container { margin-left: 5px; margin-right: 5px; }
-  h1 { font-size: 20px; text-align: center; }
-</style>
+<!DOCTYPE html> 
+<html> 
+<head> 
+<title>Where is Maggie? - marathon tracker</title> 
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0"> 
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<style type="text/css">
+  #map { min-width: 310px; height: 320px; margin: 2px; }
+  #confirmation-map { width: 100%; height: 200px; margin: 5px 2px 10px 2px; }
+</style>
 <script type="text/javascript">
 var map;
 var newyork = new google.maps.LatLng(40.74, -73.99);
@@ -30,6 +31,29 @@ function locate() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var loc = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+      var myOptions = {
+        zoom: 15,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        center: loc 
+      };
+
+      var confirmationMap = new google.maps.Map(document.getElementById("confirmation-map"), myOptions);
+      
+      var marker = new google.maps.Marker({ 
+        position: loc,
+        map: confirmationMap,
+        title: "Maggie is here!",
+        animation: google.maps.Animation.DROP
+      });
+    }, function(e) { console.log("error: " + e.code); });
+  }
+}
+
+function confirmLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var loc = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
       
       var marker = new google.maps.Marker({ 
         position: loc,
@@ -45,15 +69,69 @@ function resetMap() {
   map.setCenter(newyork);
   map.setZoom(10);
 }
+
+$('#home').live('pageinit', function(event) { initialize(); });
+$('#locate-maggie').live('tap', function(event) { locate(); });
+
+$('#confirm-location').live('tap', function(event) { confirmLocation(); });
+$('#edit-location').live('tap', function(event) { });
 </script>
-</head>
-<body onload="initialize()">
-<section class="toolbar">
-<h1>Where is Maggie?</h1>
-</section>
-<div id="map-container">
-  <div id="map" style="width: 100%, height: 100%;"></div>
+</head> 
+<body>
+<div data-role="page" id="home">
+
+  <div data-role="header" data-position="fixed">
+
+    <h1>Where is Maggie?</h1>
+    <a href="#sightings" data-icon="grid" class="ui-btn-right">History</a>
+  </div>
+
+  <div data-role="content">
+    <p>Here is where Maggie was seen last (at 12:42AM):</p>
+    <div id="map"></div>
+    <a id="locate-maggie" href="#locate-form" data-rel="dialog" data-transition="slidedown" data-role="button">I just saw Maggie!</a>
+    <!-- <a href="#" data-role="button" data-inline="true" onclick="resetMap()">Reset Map</a> -->
+  </div>
 </div>
-<div style="padding-top: 5px; text-align: center;"><a href="#" onclick="locate()">Maggie is here!</a> | <a href="#" onclick="resetMap()">Reset Map</a></div>
+
+<div data-role="page" id="sightings">
+
+  <div data-role="header" data-position="fixed">
+    <h1>Maggie was there</h1>
+    <a href="#home" data-icon="back" data-direction="reverse">Back</a>
+  </div>
+
+  <div data-role="content"> 
+    <ul data-role="listview" class="ui-listview">
+      <li class="ui-li">
+        <p class="ui-li-aside ui-li-desc"><strong>6:24</strong>PM</p>
+        <h3 class="ui-li-heading">Julien L.</h3>
+        <p class="ui-li-desc"><strong>Blablabla...</strong></p>
+        <p class="ui-li-desc">Near New York, NY</p>
+      </li> 
+      <li class="ui-li">
+        <p class="ui-li-aside ui-li-desc"><strong>4:12</strong>PM</p>
+        <h3 class="ui-li-heading">Julien L.</h3>
+        <p class="ui-li-desc"><strong>Blablabla...</strong></p>
+        <p class="ui-li-desc">Near New York, NY</p>
+      </li> 
+    </ul>
+  </div>
+</div>
+
+<div data-role="page" id="locate-form">
+  <div data-role="header">
+    <h1>Is this where you saw Maggie?</h1>
+  </div>
+
+  <div data-role="content">
+    <div id="confirmation-map"></div>
+    <label for="name" class="ui-hidden-accessible">Name:</label>
+    <input type="text" name="name" id="name" value="" placeholder="Name"/>
+    <label for="message" class="ui-hidden-accessible">Message (optional):</label>
+    <input type="text" message="message" id="message" value="" placeholder="Message (optional)"/>
+    <a href="#" id="confirm-location" data-role="button" data-rel="back">Confirm</a>
+    <a href="#" id="edit-location" data-role="button" data-rel="back" data-theme="d">Enter address manually</a>
+  </div>
+</div>
 </body>
-</html>
