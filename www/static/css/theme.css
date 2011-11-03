@@ -1,13 +1,22 @@
-.toolbar {
-    background-image: url("../img/bg_toolbar.png");
-    background-size: 75px 43px;
-    border-bottom: 1px solid #4c0733;
-}
-.toolbar h1{
-  /*  background-image: url(../img/Digiti_4.png); */
-    width: 77px; 
-    height: 44px;
-    background-size: 100% 100%;
-    margin: 0px 0px 0px -39px;
+#map { 
+  min-width: 210px; 
+  height: 260px; 
 }
 
+#confirmation-map { 
+  width: 100%; 
+  height: 160px; 
+}
+
+p {
+  -webkit-margin-before: 0.5em;
+  -webkit-margin-after: 0.5em;
+}
+
+.ui-dialog .ui-header, .ui-dialog .ui-content, .ui-dialog .ui-footer { 
+  max-width: 100%; 
+}
+
+.ui-dialog .ui-header {
+  margin: 1% auto 0 auto;
+}

@@ -3,21 +3,22 @@
 <head> 
 <title>Where is Maggie? - marathon tracker</title> 
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0"> 
+<!--
+<link rel="stylesheet" href="static/jquery/jquery.mobile-1.0rc2.min.css" />
+<script type="text/javascript" src="static/jquery/jquery-1.6.4.min.js"></script>
+<script type="text/javascript" src="static/jquery/jquery.mobile-1.0rc2.min.js"></script>
+-->
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+<link rel="stylesheet" href="static/css/theme.css" />
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
-<style type="text/css">
-  #map { min-width: 310px; height: 320px; margin: 2px; }
-  #confirmation-map { width: 100%; height: 200px; margin: 5px 2px 10px 2px; }
-</style>
 <script type="text/javascript">
 var map;
-var newyork = new google.maps.LatLng(40.74, -73.99);
+var newyork      = new google.maps.LatLng(40.74, -73.99);
+var api_base_url = "http://marathon.maggiesmeals.com/api/v1/sighting/";
 
 function initialize() {
-  window.scrollTo(0, 1);
-
   var myOptions = {
     zoom: 10,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -70,11 +71,29 @@ function resetMap() {
   map.setZoom(10);
 }
 
-$('#home').live('pageinit', function(event) { initialize(); });
+function getSightings() {
+  var url = api_base_url + "?format=json&limit=10000";
+  
+  $.getJSON(url, function(data) {
+    $.each(data, function(key, val) {
+      var li = $("<li>").addClass("ui-li");
+      console.log(key);
+      console.log(val);
+    });
+  });
+}
+
+//$.fixedToolbars.setTouchToggleEnabled(false);
+$('#home').live('pageinit', function(event) { 
+  initialize(); 
+  getSightings();
+});
 $('#locate-maggie').live('tap', function(event) { locate(); });
 
 $('#confirm-location').live('tap', function(event) { confirmLocation(); });
 $('#edit-location').live('tap', function(event) { });
+
+$('#get-sightings').live('tap', function(event) { getSightings(); });
 </script>
 </head> 
 <body>
@@ -83,11 +102,11 @@ $('#edit-location').live('tap', function(event) { });
   <div data-role="header" data-position="fixed">
 
     <h1>Where is Maggie?</h1>
-    <a href="#sightings" data-icon="grid" class="ui-btn-right">History</a>
+    <a href="#sightings" class="ui-btn-right">History</a>
   </div>
 
   <div data-role="content">
-    <p>Here is where Maggie was seen last (at 12:42AM):</p>
+    <p>Maggie was last seen at 12:48am:</p>
     <div id="map"></div>
     <a id="locate-maggie" href="#locate-form" data-rel="dialog" data-transition="slidedown" data-role="button">I just saw Maggie!</a>
     <!-- <a href="#" data-role="button" data-inline="true" onclick="resetMap()">Reset Map</a> -->
@@ -102,7 +121,8 @@ $('#edit-location').live('tap', function(event) { });
   </div>
 
   <div data-role="content"> 
-    <ul data-role="listview" class="ui-listview">
+    <a id="get-sightings" href="#" data-role="button">Load</a>
+    <ul data-role="listview" class="ui-listview" id="sightings-list">
       <li class="ui-li">
         <p class="ui-li-aside ui-li-desc"><strong>6:24</strong>PM</p>
         <h3 class="ui-li-heading">Julien L.</h3>
@@ -121,17 +141,17 @@ $('#edit-location').live('tap', function(event) { });
 
 <div data-role="page" id="locate-form">
   <div data-role="header">
-    <h1>Is this where you saw Maggie?</h1>
+    <h1>Here?</h1>
   </div>
 
   <div data-role="content">
     <div id="confirmation-map"></div>
-    <label for="name" class="ui-hidden-accessible">Name:</label>
-    <input type="text" name="name" id="name" value="" placeholder="Name"/>
+    <label for="name" class="ui-hidden-accessible">Name (optional):</label>
+    <input type="text" name="name" id="name" value="" placeholder="Name (optional)"/>
     <label for="message" class="ui-hidden-accessible">Message (optional):</label>
     <input type="text" message="message" id="message" value="" placeholder="Message (optional)"/>
-    <a href="#" id="confirm-location" data-role="button" data-rel="back">Confirm</a>
-    <a href="#" id="edit-location" data-role="button" data-rel="back" data-theme="d">Enter address manually</a>
+    <a href="#" id="confirm-location" data-role="button" data-rel="back">Yes!</a>
+    <a href="#" id="edit-location" data-role="button" data-rel="back" data-theme="d">No, enter address manually</a>
   </div>
 </div>
 </body>
