@@ -26,5 +26,5 @@ class SightingResource(DocumentResource):
 
   class Meta:
     object_class   = Sighting
-    fields         = ['person', 'message', 'address', 'location', 'log_time']
+    fields         = ['person', 'message', 'address', 'location', 'time']
     authorization  = Authorization()
