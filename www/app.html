@@ -1,0 +1,241 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<title>Where's Maggie? - marathon tracker</title> 
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0"> 
+<!--
+<link rel="stylesheet" href="static/jquery/jquery.mobile-1.0rc2.min.css" />
+<script type="text/javascript" src="static/jquery/jquery-1.6.4.min.js"></script>
+<script type="text/javascript" src="static/jquery/jquery.mobile-1.0rc2.min.js"></script>
+-->
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+<link rel="stylesheet" href="static/css/theme.css" />
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript">
+var map;
+var newyork      = new google.maps.LatLng(40.74, -73.99);
+var api_base_url = "http://marathon.maggiesmeals.com/api/v1/sighting/";
+var sightings    = null;
+
+function parseAndPrintDate(d_str, config) {
+  var d   = new Date(d_str); 
+  var now = new Date();
+  var str = "";
+
+  if ((now.getTime() % 86400) !== (d.getTime() % 86400)) {
+    if (config.verbose) { str += "on "; }
+    var month = d.getMonth() + 1;
+    var day = d.getDate();
+
+    if (month < 10) { month = "0" + month };
+    if (day < 10)   { day   = "0" + day   };
+
+    // str += month + "/" + day + "/" + d.getFullYear() + " ";
+    str += month + "/" + day +  " ";
+  } else {
+    str += "Today ";
+  }
+
+  if (config.verbose) { str += "at ";      }
+  if (config.html)    { str += "<strong>"; }
+
+  var ap = "AM";
+  var hour = d.getHours();
+
+  if (hour > 11) { ap = "PM";         }
+  if (hour > 12) { hour = hour - 12;  }
+  if (hour == 0) { hour = 12;         }
+  if (hour < 10) { hour = "0" + hour; }
+
+
+  str += hour + ":" + d.getMinutes();
+
+  if (config.html) {  str += "</strong>"; }
+
+  str += ap;
+
+  return str;
+}
+
+function initialize() {
+  var myOptions = {
+    zoom: 10,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    center: newyork
+  };
+
+  map = new google.maps.Map(document.getElementById("map"), myOptions);
+
+  getSightings(function(results) {
+    var last_sighting = (results) && (results.length > 0) ? results[0] : null;
+    
+    if (last_sighting) {
+      var loc = new google.maps.LatLng(last_sighting.location[0], last_sighting.location[1]);
+
+      var marker = new google.maps.Marker({ 
+        position: loc,
+        map: map,
+        title: "Maggie is here!",
+        animation: google.maps.Animation.DROP
+      });
+
+      $("#maggie-seen").html("Maggie was last seen " + parseAndPrintDate(last_sighting.time, {verbose: true, html: true}) + ":");
+    }
+  });
+}
+
+function locate() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var loc = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+      var myOptions = {
+        zoom: 15,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        center: loc 
+      };
+
+      var confirmationMap = new google.maps.Map(document.getElementById("confirmation-map"), myOptions);
+      
+      var marker = new google.maps.Marker({ 
+        position: loc,
+        map: confirmationMap,
+        title: "Your location",
+        animation: google.maps.Animation.DROP
+      });
+
+      var form = $("#sighting-form");
+      var latitude = $("<input>").attr({ id: "latitude", type: "hidden" });
+      var longitude = $("<input>").attr({ id: "longitude", type: "hidden" });
+
+      latitude.val(position.coords.latitude);
+      longitude.val(position.coords.longitude);
+
+      form.append(latitude);
+      form.append(longitude);
+    }, function(e) { console.log("error: " + e.code); });
+  }
+}
+
+function confirmLocation() {
+  var name      = $("input#name").val();
+  var message   = $("input#message").val(); 
+  var latitude  = $("input#latitude").val();
+  var longitude = $("input#longitude").val();
+
+  var sighting = {
+    person: name,
+    message: message,
+    location: [latitude, longitude],
+    address: "test"
+  };
+
+  $.post(api_base_url, sighting, function() {
+
+  });
+}
+
+function resetMap() {
+  map.setCenter(newyork);
+  map.setZoom(10);
+}
+
+function getSightings(callback) {
+  if (!sightings) {
+    var url = api_base_url + "?format=json&limit=10000";
+    var sightings_list = $("#sightings-list");
+    
+    $.getJSON(url, function(data) {
+      var meta = data.meta;
+
+      data.objects.sort(function(a, b) {
+        if (a.time > b.time) {
+          return -1;
+        }  else if (a.time < b.time) {
+          return 1;
+        }
+
+        return 0;
+      });
+
+      $.each(data.objects, function(key, val) {
+        var sighting = val;
+        var li = $("<li>").addClass("ui-li").addClass("ui-li-static").addClass("ui-body-c");
+        li.append($("<p>").addClass("ui-li-aside").addClass("ui-li-desc").html(parseAndPrintDate(sighting.time, {verbose: false, html: true})));
+        li.append($("<h3>").addClass("ui-li-heading").html(sighting.person));
+        li.append($("<p>").addClass("ui-li-desc").append($("<strong>").html(sighting.message)));
+        li.append($("<p>").addClass("ui-li-desc").html(sighting.address));
+        sightings_list.append(li);
+      });
+
+      sightings = data.objects;
+
+      if (callback) {
+        callback(sightings);
+      }
+    });
+  } else {
+    if (callback) {
+      callback(sightings);
+    }
+  }
+}
+
+$('#home').live('pageinit', function(event) { initialize(); });
+$('#sightings').live('pageinit', function(event) { getSightings(); });
+$('#locate-maggie').live('tap', function(event) { locate(); });
+
+$('#confirm-location').live('tap', function(event) { confirmLocation(); });
+$('#edit-location').live('tap', function(event) { });
+</script>
+</head> 
+<body>
+<div data-role="page" id="home">
+
+  <div data-role="header" data-position="fixed">
+
+    <h1>Where's Maggie?</h1>
+    <a href="#sightings" class="ui-btn-right">History</a>
+  </div>
+
+  <div data-role="content">
+    <p id="maggie-seen"></p>
+    <div id="map"></div>
+    <a id="locate-maggie" href="#locate-form" data-rel="dialog" data-transition="slidedown" data-role="button">I just saw Maggie!</a>
+    <!-- <a href="#" data-role="button" data-inline="true" onclick="resetMap()">Reset Map</a> -->
+  </div>
+</div>
+
+<div data-role="page" id="sightings">
+
+  <div data-role="header" data-position="fixed">
+    <h1>Maggie was there</h1>
+    <a href="#home" data-icon="back" data-direction="reverse">Back</a>
+  </div>
+
+  <div data-role="content"> 
+    <ul data-role="listview" class="ui-listview" id="sightings-list">
+    </ul>
+  </div>
+</div>
+
+<div data-role="page" id="locate-form">
+  <div data-role="header">
+    <h1>Here?</h1>
+  </div>
+
+  <div data-role="content">
+    <div id="confirmation-map"></div>
+    <form id="sighting-form">
+    <label for="name" class="ui-hidden-accessible">Name (optional):</label>
+    <input type="text" name="name" id="name" value="" placeholder="Name (optional)"/>
+    <label for="message" class="ui-hidden-accessible">Message (optional):</label>
+    <input type="text" message="message" id="message" value="" placeholder="Message (optional)"/>
+    </form>
+    <a href="#" id="confirm-location" data-role="button" data-rel="back">Yes!</a>
+    <a href="#" id="edit-location" data-role="button" data-rel="back" data-theme="d">No, enter address manually</a>
+  </div>
+</div>
+</body>
