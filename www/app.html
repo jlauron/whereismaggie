@@ -18,13 +18,23 @@ var map;
 var newyork      = new google.maps.LatLng(40.74, -73.99);
 var api_base_url = "http://marathon.maggiesmeals.com/api/v1/sighting/";
 var sightings    = null;
+var marker       = null;
+
+function isToday(d) {
+  var now = new Date();
+
+  return ((now.getMonth() == d.getMonth()) &&
+          (now.getDate() == d.getDate()) &&
+          (now.getFullYear() == d.getFullYear()))
+}
 
 function parseAndPrintDate(d_str, config) {
-  var d   = new Date(d_str); 
-  var now = new Date();
+  // Parsing date manually because the iphone implementation of Date() is a POJ!
+  var arr = d_str.split(/[-T:]/);
+  var d = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
   var str = "";
 
-  if ((now.getTime() % 86400) !== (d.getTime() % 86400)) {
+  if (!isToday(d)) {
     if (config.verbose) { str += "on "; }
     var month = d.getMonth() + 1;
     var day = d.getDate();
@@ -32,8 +42,7 @@ function parseAndPrintDate(d_str, config) {
     if (month < 10) { month = "0" + month };
     if (day < 10)   { day   = "0" + day   };
 
-    // str += month + "/" + day + "/" + d.getFullYear() + " ";
-    str += month + "/" + day +  " ";
+    str += month + "/" + day + "/" + d.getFullYear() + " ";
   } else {
     str += "Today ";
   }
@@ -48,7 +57,6 @@ function parseAndPrintDate(d_str, config) {
   if (hour > 12) { hour = hour - 12;  }
   if (hour == 0) { hour = 12;         }
   if (hour < 10) { hour = "0" + hour; }
-
 
   str += hour + ":" + d.getMinutes();
 
@@ -74,14 +82,18 @@ function initialize() {
     if (last_sighting) {
       var loc = new google.maps.LatLng(last_sighting.location[0], last_sighting.location[1]);
 
-      var marker = new google.maps.Marker({ 
+      var m = new google.maps.Marker({ 
         position: loc,
         map: map,
         title: "Maggie is here!",
         animation: google.maps.Animation.DROP
       });
 
+      marker = m;
+
       $("#maggie-seen").html("Maggie was last seen " + parseAndPrintDate(last_sighting.time, {verbose: true, html: true}) + ":");
+    } else {
+      $("#maggie-seen").html("Maggie was not seen anywhere yet.");
     }
   });
 }
@@ -99,7 +111,7 @@ function locate() {
 
       var confirmationMap = new google.maps.Map(document.getElementById("confirmation-map"), myOptions);
       
-      var marker = new google.maps.Marker({ 
+      var m = new google.maps.Marker({ 
         position: loc,
         map: confirmationMap,
         title: "Your location",
@@ -125,15 +137,32 @@ function confirmLocation() {
   var latitude  = $("input#latitude").val();
   var longitude = $("input#longitude").val();
 
-  var sighting = {
-    person: name,
-    message: message,
-    location: [latitude, longitude],
-    address: "test"
-  };
+  // If only jQuery supported stringify...
+  var sighting_str = '{ "person": "' + name + '", "message": "' + message + '", "location": [' + latitude + ', ' + longitude + '], "address": "test" }';
 
-  $.post(api_base_url, sighting, function() {
+  $.ajax({
+    type:     "POST",
+    url:      api_base_url,
+    dataType: 'json',
+    data:     sighting_str,
+    contentType: 'application/json',
+    success: function() { 
+      if (marker) {
+        marker.setMap(null);
+      }
 
+      var loc = new google.maps.LatLng(latitude, longitude);
+
+      var m = new google.maps.Marker({ 
+        position: loc,
+        map: map,
+        title: "Maggie is now here!",
+        animation: google.maps.Animation.DROP
+      });
+
+      $("#maggie-seen").html("Thanks for sharing your location! Maggie is now here:");
+      $('.ui-dialog').dialog('close');
+    }
   });
 }
 
@@ -204,7 +233,6 @@ $('#edit-location').live('tap', function(event) { });
     <p id="maggie-seen"></p>
     <div id="map"></div>
     <a id="locate-maggie" href="#locate-form" data-rel="dialog" data-transition="slidedown" data-role="button">I just saw Maggie!</a>
-    <!-- <a href="#" data-role="button" data-inline="true" onclick="resetMap()">Reset Map</a> -->
   </div>
 </div>
 
@@ -234,8 +262,18 @@ $('#edit-location').live('tap', function(event) { });
     <label for="message" class="ui-hidden-accessible">Message (optional):</label>
     <input type="text" message="message" id="message" value="" placeholder="Message (optional)"/>
     </form>
-    <a href="#" id="confirm-location" data-role="button" data-rel="back">Yes!</a>
+    <a href="#" id="confirm-location" data-role="button">Yes!</a>
     <a href="#" id="edit-location" data-role="button" data-rel="back" data-theme="d">No, enter address manually</a>
   </div>
 </div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-5339333-1");
+pageTracker._setDomainName('.maggiesmeals.com');
+pageTracker._trackPageview();
+} catch(err) {}</script>
 </body>
