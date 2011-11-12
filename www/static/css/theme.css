@@ -1,11 +1,13 @@
 #map { 
-  min-width: 210px; 
   height: 260px; 
 }
 
 #confirmation-map { 
-  width: 100%; 
   height: 160px; 
+}
+
+#full-map { 
+  height: 320px; 
 }
 
 p {
@@ -14,7 +16,7 @@ p {
 }
 
 .ui-dialog .ui-header, .ui-dialog .ui-content, .ui-dialog .ui-footer { 
-  max-width: 100%; 
+  max-width: 100%;
 }
 
 .ui-dialog .ui-header {
@@ -28,4 +30,5 @@ p#maggie-seen {
 
 .ui-content {
   padding: 10px;
+  overflow: hidden;
 }

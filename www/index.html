@@ -1,9 +1,80 @@
 <!DOCTYPE html> 
 <html> 
 <head> 
+<title>Maggie's Marathon Tracker</title> 
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1.0"> 
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
+<link rel="stylesheet" href="static/css/theme.css" />
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="static/js/whereismaggie.js"></script>
 </head> 
 <body>
-<h1>Site down for maintenance - Where's Maggie coming back soon :)</h1>
+<div data-role="page" id="home">
+  <div data-role="header" data-position="fixed">
+    <a href="#" class="ui-btn-left" id="refresh-button" data-icon="refresh" data-iconpos="notext">Refresh</a>
+    <h1>Where's Maggie?</h1>
+    <a href="#sightings" class="ui-btn-right" id="history-button" style="display: none;">History</a>
+  </div>
+
+  <div data-role="content">
+    <p id="maggie-seen"></p>
+    <div id="map"></div>
+    <a id="locate-maggie" href="#locate-form" data-rel="dialog" data-transition="slidedown" data-role="button">I just saw Maggie!</a>
+  </div>
+</div>
+
+<div data-role="page" id="sightings">
+  <div data-role="header" data-position="fixed">
+    <a href="#home" class="ui-btn-left" data-icon="arrow-l" data-direction="reverse" data-iconpos="notext">Back</a>
+    <h1>Maggie was there</h1>
+    <a href="#fullmap-dialog" class="ui-btn-right" id="fullmap-button" data-rel="dialog" data-transition="slidedown">Map</a>
+  </div>
+
+  <div data-role="content"> 
+    <ul data-role="listview" class="ui-listview" id="sightings-list">
+    </ul>
+  </div>
+</div>
+
+<div data-role="page" id="fullmap-dialog">
+  <div data-role="header">
+    <h1>Route</h1>
+  </div>
+
+  <div data-role="content">
+    <div id="full-map"></div>
+  </div>
+</div>
+
+<div data-role="page" id="locate-form">
+  <div data-role="header">
+    <h1>Here?</h1>
+  </div>
+
+  <div data-role="content">
+    <div id="confirmation-map"></div>
+    <form id="sighting-form">
+    <input type="hidden" name="latitude"  id="latitude"  value=""/>
+    <input type="hidden" name="longitude" id="longitude" value=""/>
+    <label for="name" class="ui-hidden-accessible">Name (optional):</label>
+    <input type="text" name="name" id="name" value="" placeholder="Name (optional)"/>
+    <label for="message" class="ui-hidden-accessible">Message (optional):</label>
+    <input type="text" name="message" id="message" value="" placeholder="Message (optional)"/>
+    <div id="address-form" style="display: none;">
+      <label for="address" class="ui-hidden-accessible">Address:</label>
+      <input type="text" name="address" id="address" value="" placeholder="Address"/>
+      <a href="#" id="verify-address" data-role="button">Verify Address</a>
+      <a href="#" id="confirm-location" data-role="button">Confirm!</a>
+    </div>
+    </form>
+    <div id="confirm-or-edit">
+      <a href="#" id="confirm-location" data-role="button">Yes!</a>
+      <a href="#" id="edit-location" data-role="button" data-theme="d">No, enter address manually</a>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
